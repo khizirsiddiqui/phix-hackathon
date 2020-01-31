@@ -23,21 +23,21 @@ def get_friends(request, username):
         user = get_object_or_404(User, username=username)
         profile = Profile.objects.get(user=user)
         friends = profile.friends.all()
-        serializer = UserSerializer(friends, many=True)
+        serializer = UserSerializer(friends, many=True, context={"request": request})
         return JSONResponse(serializer.data)
 
 def get_profile_data(request, username):
     if request.method == 'GET':
         user = get_object_or_404(User, username=username)
         profile = Profile.objects.get(user=user)
-        serializer = ProfileSerializer(profile, many=False)
+        serializer = ProfileSerializer(profile, many=False, context={"request": request})
         return JSONResponse(serializer.data)
 
 def check_user_exists(request, username):
     if request.method == 'GET':
         try:
             user = User.objects.get(username=username)
-            serializer = UserSerializer(user, many=False)
+            serializer = UserSerializer(user, many=False, context={"request": request})
             return JSONResponse(serializer.data)
         except User.DoesNotExist:
             return JSONResponse(

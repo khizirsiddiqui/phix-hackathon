@@ -6,6 +6,7 @@ from django.db.models import Q
 
 from phix import settings
 from .utils import image_as_base64
+from .validators import validate_upi_id
 from transactions.models import Transaction
 
 from imagekit.models import ProcessedImageField
@@ -24,6 +25,7 @@ class Profile(models.Model):
     active = models.BooleanField("Active Account", default=True)
     currency = models.CharField("Currency", default="INR", max_length=5)
     friends = models.ManyToManyField(User, related_name="friends")
+    upi_id = models.CharField("UPI ID", max_length=100, default="example@upi", validators=[validate_upi_id])
 
     def __str__(self):
         return self.user.get_full_name()
