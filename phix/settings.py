@@ -85,7 +85,7 @@ DATABASES = {
         'NAME': 'phix',
         'USER': 'root',
         'PASSWORD': 'adminr00t',
-        'HOST': 'localhost',
+        'HOST': 'desolate-sands-48930.herokuapp.com',
         'PORT': '',
     }
 }
