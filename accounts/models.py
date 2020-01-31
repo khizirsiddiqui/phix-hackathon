@@ -23,6 +23,7 @@ class Profile(models.Model):
     monthly_stipend = models.FloatField("Monthly Expense", default=0)
     active = models.BooleanField("Active Account", default=True)
     currency = models.CharField("Currency", default="INR", max_length=5)
+    friends = models.ManyToManyField(User, related_name="friends")
 
     def __str__(self):
         return self.user.get_full_name()
