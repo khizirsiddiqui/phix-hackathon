@@ -81,8 +81,12 @@ WSGI_APPLICATION = 'phix.wsgi.application'
 
 DATABASES = {
     'default': {
-        'ENGINE': 'django.db.backends.sqlite3',
-        'NAME': os.path.join(BASE_DIR, 'db.sqlite3'),
+        'ENGINE': 'django.db.backends.postgresql_psycopg2',
+        'NAME': 'phix',
+        'USER': 'root',
+        'PASSWORD': 'adminr00t',
+        'HOST': 'localhost',
+        'PORT': '',
     }
 }
 
