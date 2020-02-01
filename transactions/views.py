@@ -1,6 +1,7 @@
 from django.http import HttpResponse
 from django.shortcuts import get_object_or_404
 from django.contrib.auth.models import User
+from django.utils.timezone import make_aware
 
 from rest_framework.renderers import JSONRenderer
 from rest_framework.parsers import JSONParser
@@ -103,8 +104,8 @@ def get_home_activity_analytics_data(request):
             )
         analytics = {}
 
-        num_days_left = (last_day_of_month(datetime.today()) - datetime.today()).days
-        num_days_this_month = datetime.today().day
+        num_days_left = (make_aware(last_day_of_month(datetime.today())) - make_aware(datetime.today())).days
+        num_days_this_month = make_aware(datetime.today().day)
         dnames = {'0':'today', '7':'week', '31':'month', str(num_days_this_month):'this_month'}
         for dlen in (0, 7, 31, num_days_this_month):
             txn_set = user.profile.get_analytic_transactions(dlen)
@@ -131,21 +132,24 @@ def get_analytics(request, username):
                 'error_code': 'E001'
             }
         )
-    base = datetime.today()
+    base = make_aware(datetime.today())
     date_list = [base - timedelta(days=x) for x in range(0, 30)]
+
     analytics = {}
     for dateX in date_list:
         txn_set = user.profile.get_transactions_on(dateX)
         analytics[dateX.day] = 0
         for txn in txn_set:
             amount = int(txn.amount)
+            print(str(amount) + " :: " + dateX.strftime("%d-%m-%y"))
             if txn.txn_type == 0:
                 # IF debit
                 amount = amount * -1.
         analytics[dateX.day] += amount
+
     stats = {}
-    num_days_left = (last_day_of_month(datetime.today()) - datetime.today()).days
-    num_days_this_month = datetime.today().day
+    num_days_left = (make_aware(last_day_of_month(datetime.today())) - make_aware(datetime.today())).days
+    num_days_this_month = make_aware(datetime.today()).day
     dnames = {'0':'today', '7':'week', '31':'month', str(num_days_this_month):'this_month'}
     for dlen in (0, 7, 31, num_days_this_month):
         txn_set = user.profile.get_analytic_transactions(dlen)
@@ -189,7 +193,7 @@ def settle_up(request, source, destination):
         transaction = Transaction.objects.create(
             source=user,
             destination=destination,
-            txn_date_time=datetime.now,
+            txn_date_time=make_aware(datetime.now),
             status='processed',
             description=request.POST['description'],
             txn_id=request.POST['txn_id'],

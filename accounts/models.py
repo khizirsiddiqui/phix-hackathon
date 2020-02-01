@@ -3,6 +3,7 @@ from django.contrib.auth.models import User
 from django.db.models.signals import post_save
 from django.dispatch import receiver
 from django.db.models import Q
+from django.utils.timezone import make_aware
 
 from phix import settings
 from .utils import image_as_base64
@@ -43,9 +44,9 @@ class Profile(models.Model):
     def get_all_specific(self, from_date=None, to_date=None, second_user=None, txn_type=1):
         if from_date is None:
             # This is a random date before which no txn could have been recorded.
-            from_date = datetime(2000, 1, 1, 0, 0, 1)
+            from_date = make_aware(datetime(2000, 1, 1, 0, 0, 1))
         if to_date is None:
-            to_date = datetime.now()
+            to_date = make_aware(datetime.now())
         transactions = Transaction.objects.filter(
             (Q(txn_type=txn_type) & Q(destination=second_user) & Q(source=self.user)) | 
             (Q(txn_type=(not txn_type)) & Q(source=second_user) & Q(destination=self.user)),
@@ -56,8 +57,8 @@ class Profile(models.Model):
         return transactions
 
     def get_analytic_transactions(self, dlen=0):
-        from_date = datetime.combine(date.today() - timedelta(dlen, 0, 0), time(0,0,0))
-        to_date = datetime.now()
+        from_date = make_aware(datetime.combine(date.today() - timedelta(dlen, 0, 0), time(0,0,0)))
+        to_date = make_aware(datetime.now())
         transactions = Transaction.objects.filter(
             Q(destination=self.user) | Q(source=self.user),
             txn_date_time__range=[
@@ -67,8 +68,8 @@ class Profile(models.Model):
         return transactions
 
     def get_transactions_on(self, dateX):
-        from_date = datetime.combine(dateX.date(), time(0, 0, 0))
-        to_date = datetime.combine(dateX.date(), time(23, 59, 59))
+        from_date = make_aware(datetime.combine(dateX.date(), time(0, 0, 0)))
+        to_date = make_aware(datetime.combine(dateX.date(), time(23, 59, 59)))
         transactions = Transaction.objects.filter(
             Q(destination=self.user) | Q(source=self.user),
             txn_date_time__range=[
