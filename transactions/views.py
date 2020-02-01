@@ -4,6 +4,9 @@ from django.contrib.auth.models import User
 
 from rest_framework.renderers import JSONRenderer
 from rest_framework.parsers import JSONParser
+from rest_framework.views import APIView
+from rest_framework.response import Response
+from rest_framework import status
 from datetime import datetime
 
 from accounts.models import Profile
@@ -51,57 +54,10 @@ def all_P2P_transactions(request, username1, username2):
         serializer = TransactionSerializer(transactions, many=True)
         return JSONResponse(serializer.data)
 
-def create_transaction(request,
-                       amount,
-                       source,
-                       destination,
-                       txn_type,
-                       description,
-                       txn_id,
-                       status,
-                       txn_date_time):
-    if request.POST:
-        error = None
-        error_msg = ''
-        if request.POST:
-            try:
-                source = User.objects.get(username=source)
-            except User.DoesNotExist:
-                error = 'E001'
-                error_msg = 'User does Not exists.'
-                return JSONResponse({
-                    'error': error,
-                    'error_msg': error_msg
-                })
-
-            if destination is not None:
-                destination = get_object_or_404(User, username=destination)
-
-            try:
-                amount = float(amount)
-            except ValueError:
-                error = 'E011'
-                error_msg = 'Invalid Amount ' + str(amount)
-                return JSONResponse({
-                    'error': error,
-                    'error_msg': error_msg
-                })
-
-            if txn_date_time is None:
-                txn_date_time = datetime.now
-
-            txn_obj = Transaction.objects.create(
-                amount=amount,
-                txn_id=txn_id,
-                description=description,
-                destination=destination,
-                txn_type=txn_type,
-                status=status,
-                txn_date_time=txn_date_time
-            )
-            serializer = TransactionSerializer(txn_obj, many=False)
-            return JSONResponse(serializer.data)
-    return JSONResponse({
-        'error': 'E101',
-        'error_msg': 'ONlY POST REQUEST ACCEPTED.'
-    })
+class TransactionAPIView(APIView):
+    def post(self, request, format=None):
+        serializer = TransactionSerializer(data=request.data)
+        if serializer.is_valid():
+            serializer.save()
+            return Response(serializer.data, status=status.HTTP_201_CREATED)
+        return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)

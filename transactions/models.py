@@ -9,7 +9,7 @@ class Transaction(models.Model):
     )
 
     amount = models.FloatField("Amount")
-    txn_id = models.CharField("Transaction ID", max_length=20)
+    txn_id = models.CharField("Transaction ID", max_length=20, unique=True)
     description = models.CharField("Description", max_length=145)
     source = models.ForeignKey(
         User,

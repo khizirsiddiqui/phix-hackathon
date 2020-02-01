@@ -39,6 +39,7 @@ INSTALLED_APPS = [
     'django.contrib.staticfiles',
 
     'imagekit',
+    'rest_framework',
 
     'accounts',
     'transactions',

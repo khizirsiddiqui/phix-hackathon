@@ -47,18 +47,11 @@ class Profile(models.Model):
         if to_date is None:
             to_date = datetime.now()
         transactions = Transaction.objects.filter(
+            (Q(txn_type=txn_type) & Q(destination=second_user) & Q(source=self.user)) | 
+            (Q(txn_type=(not txn_type)) & Q(source=second_user) & Q(destination=self.user)),
             txn_date_time__range=[
                 from_date.strftime("%Y-%m-%d %H:%M:%S"),
                 to_date.strftime("%Y-%m-%d %H:%M:%S")],
-            txn_type=txn_type,
-            destination=second_user
-        )
-        transactions |= Transaction.objects.filter(
-            txn_date_time__range=[
-                from_date.strftime("%Y-%m-%d %H:%M:%S"),
-                to_date.strftime("%Y-%m-%d %H:%M:%S")],
-            txn_type=(not txn_type),
-            source=second_user
         )
         return transactions
 
