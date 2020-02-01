@@ -11,7 +11,7 @@ from transactions.models import Transaction
 
 from imagekit.models import ProcessedImageField
 from imagekit.processors import ResizeToFill
-from datetime import datetime, date, time
+from datetime import datetime, date, time, timedelta
 
 
 class Profile(models.Model):
@@ -55,9 +55,20 @@ class Profile(models.Model):
         )
         return transactions
 
-    def get_today_transactions(self):
-        from_date = datetime.combine(date.today(), time(0,0,0))
+    def get_analytic_transactions(self, dlen=0):
+        from_date = datetime.combine(date.today() - timedelta(dlen, 0, 0), time(0,0,0))
         to_date = datetime.now()
+        transactions = Transaction.objects.filter(
+            Q(destination=self.user) | Q(source=self.user),
+            txn_date_time__range=[
+                from_date.strftime("%Y-%m-%d %H:%M:%S"),
+                to_date.strftime("%Y-%m-%d %H:%M:%S")],
+        )
+        return transactions
+
+    def get_transactions_on(self, dateX):
+        from_date = datetime.combine(dateX.date(), time(0, 0, 0))
+        to_date = datetime.combine(dateX.date(), time(23, 59, 59))
         transactions = Transaction.objects.filter(
             Q(destination=self.user) | Q(source=self.user),
             txn_date_time__range=[
