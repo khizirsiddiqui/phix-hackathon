@@ -2,7 +2,7 @@ from django.contrib.auth.models import User
 
 from rest_framework import serializers
 
-from .models import Profile
+from .models import Profile, Group
 
 class UserSerializer(serializers.ModelSerializer):
     image_url = serializers.SerializerMethodField()
@@ -47,3 +47,8 @@ class ProfileSerializer(serializers.ModelSerializer):
             'friends',
             'image',
             'upi_id')
+
+class GroupSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = Group
+        exclude = ('')

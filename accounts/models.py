@@ -83,3 +83,14 @@ def create_user_profile(sender, instance, created, **kwargs):
 def save_user_profile(sender, instance, **kwargs):
     instance.profile.save()
 
+
+class Group(models.Model):
+    title = models.CharField("Group Title", max_length=64)
+    members = models.ManyToManyField(Profile, related_name="group")
+
+    class Meta:
+        verbose_name = 'Group'
+        verbose_name_plural = 'Groups'
+    
+    def __str__(self):
+        return self.title + " ( " + str(self.members.all().count()) + " )"
