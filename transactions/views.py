@@ -34,6 +34,23 @@ def user_transaction_list(request, username, txn_type):
         serializer = TransactionSerializer(transactions, many=True)
         return JSONResponse(serializer.data)
 
+def user_today_transactions(request, username):
+    if request.method == 'GET':
+        user = get_object_or_404(User, username=username)
+        profile = Profile.objects.get(user=user)
+        transactions = profile.get_today_transactions()
+        serializer = TransactionSerializer(transactions, many=True)
+        return JSONResponse(serializer.data)
+
+def all_P2P_transactions(request, username1, username2):
+    if request.method == 'GET':
+        user = get_object_or_404(User, username=username1)
+        profile = Profile.objects.get(user=user)
+        second_user = get_object_or_404(User, username=username2)
+        transactions = profile.all_P2P_transactions(second_user)
+        serializer = TransactionSerializer(transactions, many=True)
+        return JSONResponse(serializer.data)
+
 def create_transaction(request,
                        amount,
                        source,

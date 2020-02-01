@@ -11,7 +11,7 @@ from transactions.models import Transaction
 
 from imagekit.models import ProcessedImageField
 from imagekit.processors import ResizeToFill
-from datetime import datetime
+from datetime import datetime, date, time
 
 
 class Profile(models.Model):
@@ -41,17 +41,45 @@ class Profile(models.Model):
         return image_as_base64(settings.MEDIA_ROOT + self.image.path)
     
     def get_all_specific(self, from_date=None, to_date=None, second_user=None, txn_type=1):
-        # if from_date is None:
-        #     from_date = datetime(2000, 1, 1, 0, 0, 1)
-        # if to_date is None:
-        #     to_date = datetime.now
+        if from_date is None:
+            # This is a random date before which no txn could have been recorded.
+            from_date = datetime(2000, 1, 1, 0, 0, 1)
+        if to_date is None:
+            to_date = datetime.now()
         transactions = Transaction.objects.filter(
-            # Q(txn_date_time__gte=from_date) & Q(txn_date_time__lte=to_date),
+            txn_date_time__range=[
+                from_date.strftime("%Y-%m-%d %H:%M:%S"),
+                to_date.strftime("%Y-%m-%d %H:%M:%S")],
             txn_type=txn_type,
-            destination=second_user,
-            source=self.user
+            destination=second_user
+        )
+        transactions |= Transaction.objects.filter(
+            txn_date_time__range=[
+                from_date.strftime("%Y-%m-%d %H:%M:%S"),
+                to_date.strftime("%Y-%m-%d %H:%M:%S")],
+            txn_type=(not txn_type),
+            source=second_user
         )
         return transactions
+
+    def get_today_transactions(self):
+        from_date = datetime.combine(date.today(), time(0,0,0))
+        to_date = datetime.now()
+        transactions = Transaction.objects.filter(
+            Q(destination=self.user) | Q(source=self.user),
+            txn_date_time__range=[
+                from_date.strftime("%Y-%m-%d %H:%M:%S"),
+                to_date.strftime("%Y-%m-%d %H:%M:%S")],
+        )
+        return transactions
+
+    def all_P2P_transactions(self, second_person):
+        transactions = Transaction.objects.filter(
+            (Q(destination=self.user) & Q(source=second_person)) | 
+            (Q(destination=second_person) & Q(source=self.user))
+        )
+        return transactions
+        
 
 @receiver(post_save, sender=User)
 def create_user_profile(sender, instance, created, **kwargs):
