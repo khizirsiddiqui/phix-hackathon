@@ -83,6 +83,13 @@ class Profile(models.Model):
             (Q(destination=second_person) & Q(source=self.user))
         )
         return transactions
+
+    def all_transactions(self):
+        transactions = Transaction.objects.filter(
+            (Q(destination=self.user)) | 
+            (Q(source=self.user))
+        )
+        return transactions
         
 
 @receiver(post_save, sender=User)

@@ -2,6 +2,7 @@ from django.http import HttpResponse
 from django.shortcuts import render
 from django.shortcuts import get_object_or_404
 from django.contrib.auth.models import User
+from django.views.decorators.csrf import csrf_exempt
 
 from .models import Profile, Group
 from .serializers import UserSerializer, ProfileSerializer, CreateUserSerializer, GroupSerializer
@@ -45,9 +46,7 @@ def get_groups(request):
                     'error_code': 'E001'
                 }
             )
-        print(user)
         groups = user.profile.group.all()
-        print(groups)
         serializer = GroupSerializer(groups, many=True,)
         return JSONResponse(serializer.data)
 
@@ -61,11 +60,15 @@ def get_profile_data(request, username):
 def check_user_exists(username):
     return User.objects.filter(username=username).count() > 0
 
-def check_user_exists_api(request, username):
+def add_friend(request, username, friend_username):
     if request.method == 'GET':
-        if check_user_exists(username):
+        if check_user_exists(friend_username):
+            friend = User.objects.get(username=friend_username)
             user = User.objects.get(username=username)
-            serializer = UserSerializer(user, many=False, context={"request": request})
+            user.profile.friends.add(friend)
+            user.profile.save()
+            friends = user.profile.friends.all()
+            serializer = UserSerializer(friends, many=True, context={"request": request})
             return JSONResponse(serializer.data)
         else:
             return JSONResponse(
@@ -75,6 +78,7 @@ def check_user_exists_api(request, username):
                 }
             )
 
+@csrf_exempt
 @api_view(['POST'])
 def create_user(request):
     if request.POST:

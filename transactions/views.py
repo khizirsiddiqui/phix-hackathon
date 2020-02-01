@@ -24,9 +24,10 @@ class JSONResponse(HttpResponse):
         kwargs['content_type'] = 'application/json'
         super(JSONResponse, self).__init__(content, **kwargs)
 
-def transaction_list(request):
+def transaction_list(request, username):
     if request.method == 'GET':
-        transactions = Transaction.objects.all()
+        user = get_object_or_404(User, username=username)
+        transactions = user.profile.all_transactions()
         serializer = TransactionSerializer(transactions, many=True)
         return JSONResponse(serializer.data)
 
@@ -142,15 +143,32 @@ def get_analytics(request, username):
                 # IF debit
                 amount = amount * -1.
         analytics[dateX.day] += amount
+    stats = {}
+    num_days_left = (last_day_of_month(datetime.today()) - datetime.today()).days
+    num_days_this_month = datetime.today().day
+    dnames = {'0':'today', '7':'week', '31':'month', str(num_days_this_month):'this_month'}
+    for dlen in (0, 7, 31, num_days_this_month):
+        txn_set = user.profile.get_analytic_transactions(dlen)
+        stats[dnames[str(dlen)]] = 0
+        for txn in txn_set:
+            amount = int(txn.amount)
+            if txn.txn_type == 0:
+                # IF debit
+                amount = amount * -1.
+            stats[dnames[str(dlen)]] += amount
+    stats['daily_avg_current'] = int(stats['this_month'])/num_days_this_month
+    stats['daily_avg_required'] = int(user.profile.monthly_stipend - stats['this_month'])/num_days_left
+    stats['days_remaining'] = num_days_left
     return JSONResponse({
         "data": analytics,
+        'stats': stats
     })
 
 def get_outstanding(request, source, destination):
     if request.method == 'GET':
         user = get_object_or_404(User, username=source)
         second_user = get_object_or_404(User, username=destination)
-        transactions = user.profile.all_P2P_transactions(second_user)
+        txn_set = user.profile.all_P2P_transactions(second_user)
         total_amount = 0
         for txn in txn_set:
             amount = int(txn.amount)

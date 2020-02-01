@@ -5,7 +5,6 @@ from rest_framework import serializers
 from .models import Profile, Group
 
 class UserSerializer(serializers.ModelSerializer):
-    image_url = serializers.SerializerMethodField()
     upi_id = serializers.SerializerMethodField()
 
     class Meta:
@@ -13,14 +12,7 @@ class UserSerializer(serializers.ModelSerializer):
         fields = (
             'username',
             'get_full_name',
-            'image_url',
             'upi_id')
-    
-    def get_image_url(self, user):
-        profile = Profile.objects.get(user=user)
-        request = self.context.get("request")
-        photo_url = profile.image.url
-        return request.build_absolute_uri(photo_url)
 
     def get_upi_id(self, user):
         profile = Profile.objects.get(user=user)
@@ -45,7 +37,6 @@ class ProfileSerializer(serializers.ModelSerializer):
             'monthly_stipend',
             'active',
             'friends',
-            'image',
             'upi_id')
 
 class GroupSerializer(serializers.ModelSerializer):
