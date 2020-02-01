@@ -26,6 +26,16 @@ class UserSerializer(serializers.ModelSerializer):
         profile = Profile.objects.get(user=user)
         return profile.upi_id
 
+class CreateUserSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = User
+        fields = (
+            'username',
+            'first_name',
+            'last_name',
+            'email',
+        )
+
 class ProfileSerializer(serializers.ModelSerializer):
     class Meta:
         model = Profile
@@ -35,4 +45,5 @@ class ProfileSerializer(serializers.ModelSerializer):
             'monthly_stipend',
             'active',
             'friends',
-            'image')
+            'image',
+            'upi_id')
