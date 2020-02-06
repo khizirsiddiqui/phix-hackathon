@@ -13,5 +13,6 @@ class TransactionSerializer(serializers.ModelSerializer):
             'txn_type',
             'status',
             'currency',
+            'active',
             'txn_date_time',
             'description')

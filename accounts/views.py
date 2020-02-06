@@ -1,4 +1,4 @@
-from django.http import HttpResponse
+from django.http import HttpResponse, HttpResponseForbidden
 from django.shortcuts import render
 from django.shortcuts import get_object_or_404
 from django.contrib.auth.models import User
@@ -81,65 +81,70 @@ def add_friend(request, username, friend_username):
 @csrf_exempt
 @api_view(['POST'])
 def create_user(request):
-    if request.POST:
-        if 'email' not in request.POST:
-            return JSONResponse(
-                {
-                    'error': 'Invalid Email ID.',
-                    'error_code': 'E003'
-                }
-            )
-        email = request.POST['email']
-        username = ''
-        if ('@' in email):
-            username = email.split('@')[0]
-        else:
-            return JSONResponse(
-                {
-                    'error': 'Invalid Email ID.',
-                    'error_code': 'E003'
-                }
-            )
-        if check_user_exists(username):
-            return JSONResponse(
-                {
-                    'error': 'User already exists.',
-                    'error_code': 'E002'
-                }
-            )
-        if 'full_name' not in request.POST:
-            return JSONResponse(
-                {
-                    'error': 'Can not create account without Name.',
-                    'error_code': 'E004'
-                }
-            )
-        full_name = request.POST['full_name']
-        first_name, last_name = full_name.split()
-        if 'upi_id' not in request.POST:
-            return JSONResponse({
+    if 'email' not in request.POST:
+        return Response(
+            {
+                'error': 'Invalid Email ID.',
+                'error_code': 'E003'
+            },
+            status=status.HTTP_204_NO_CONTENT
+        )
+    email = request.POST['email']
+    username = ''
+    if ('@' in email):
+        username = email.split('@')[0]
+    else:
+        return Response(
+            {
+                'error': 'Invalid Email ID.',
+                'error_code': 'E003'
+            },
+            status=status.HTTP_204_NO_CONTENT
+        )
+    if check_user_exists(username):
+        return Response(
+            {
+                'error': 'User already exists.',
+                'error_code': 'E002'
+            },
+            status=status.HTTP_204_NO_CONTENT
+        )
+    if 'get_full_name' not in request.POST:
+        return Response(
+            {
+                'error': 'Can not create account without Name.',
+                'error_code': 'E004'
+            },
+            status=status.HTTP_204_NO_CONTENT
+        )
+    full_name = request.POST['get_full_name']
+    first_name, last_name = full_name.split()
+    if 'upi_id' not in request.POST:
+        return Response({
                 'error_code': 'E005',
                 'error': 'Can not create account without UPI ID.'
-            })
-        if 'image_string' not in request.POST:
-            return JSONResponse({
+            },
+            status=status.HTTP_204_NO_CONTENT)
+    if 'image_string' not in request.POST:
+        return JSONResponse({
                 'error_code': 'E006',
-                'err*or': 'Can not create account without Image.'
-            })
-        
-        user_data = {
-            'username': username,
-            'first_name': first_name,
-            'last_name': last_name,
-            'email': email
-        }
-        user_serializer = CreateUserSerializer(data=user_data)
-        if user_serializer.is_valid():
-            instance = user_serializer.save()
-            profile = Profile.objects.get(user=instance)
-            profile.upi_id = request.POST['upi_id']
-            profile.total_expense = request.POST.get('total_expense', 0)
-            profile.monthly_stipend = request.POST.get('monthly_stipend', 0)
-            profile.save()
-            return Response(user_serializer.data, status=status.HTTP_201_CREATED)
-        return Response(user_serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+                'error': 'Can not create account without Image.'
+            },
+            status=status.HTTP_204_NO_CONTENT)
+    
+    user_data = {
+        'username': username,
+        'first_name': first_name,
+        'last_name': last_name,
+        'email': email
+    }
+    user_serializer = CreateUserSerializer(data=user_data)
+    if user_serializer.is_valid():
+        instance = user_serializer.save()
+        profile = Profile.objects.get(user=instance)
+        profile.upi_id = request.POST['upi_id']
+        profile.total_expense = request.POST.get('total_expense', 0)
+        profile.monthly_stipend = request.POST.get('monthly_stipend', 0)
+        profile.save()
+        return Response(user_serializer.data, status=status.HTTP_201_CREATED)
+    return Response(user_serializer.errors, status=status.HTTP_400_BAD_REQUEST)

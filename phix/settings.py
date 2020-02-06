@@ -25,7 +25,7 @@ SECRET_KEY = '7q4@^(qr2a1(q$dw1g1!4+qs#rzvowtv7(3#3@yop5e6^^zs$$'
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = True
 
-ALLOWED_HOSTS = ['localhost', '127.00.0.1', 'desolate-sands-48930.herokuapp.com', '15ad2c3c.ngrok.io']
+ALLOWED_HOSTS = ['localhost', '127.00.0.1', 'desolate-sands-48930.herokuapp.com', 'd45239ae.ngrok.io']
 
 
 # Application definition

@@ -14,4 +14,5 @@ urlpatterns = [
     path(r'transactions/<username1>/<username2>/', views.all_P2P_transactions, name='all_P2P_transactions'),
 
     path(r'create_transaction/', views.TransactionAPIView.as_view(), name='create_transaction'),
+    path(r'settle/<txnId>/', views.settle_single_transaction, name='settle_single_transaction'),
 ]

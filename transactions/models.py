@@ -15,6 +15,7 @@ class Transaction(models.Model):
         User,
         on_delete=models.CASCADE,
         related_name="source")
+    active = models.BooleanField("Unsettled", default=True)
     destination = models.ForeignKey(
         User,
         on_delete=models.CASCADE,
@@ -33,3 +34,9 @@ class Transaction(models.Model):
     def __str__(self):
         return  self.description + " " + self.currency + " " + str(self.amount)
 
+    def settle(self):
+        if self.active:
+            return False
+        else:
+            self.active = False
+            return True

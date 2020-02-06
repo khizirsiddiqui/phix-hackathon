@@ -141,11 +141,10 @@ def get_analytics(request, username):
         analytics[dateX.day] = 0
         for txn in txn_set:
             amount = int(txn.amount)
-            print(str(amount) + " :: " + dateX.strftime("%d-%m-%y"))
             if txn.txn_type == 0:
                 # IF debit
                 amount = amount * -1.
-        analytics[dateX.day] += amount
+            analytics[dateX.day] += amount
 
     stats = {}
     num_days_left = (make_aware(last_day_of_month(datetime.today())) - make_aware(datetime.today())).days
@@ -197,10 +196,22 @@ def settle_up(request, source, destination):
             status='processed',
             description=request.POST['description'],
             txn_id=request.POST['txn_id'],
-            txn_type=txn_type_dict[request.POST['txn_id']]
+            txn_type=txn_type_dict[request.POST['txn_type']]
         )
         return JSONResponse(TransactionSerializer(transaction).data)
 
+@api_view(['POST'])
+def settle_single_transaction(request, txnId):
+    transaction = get_object_or_404(Transaction, txn_id=txnId)
+    res = transaction.settle()
+    if res:
+        return Response(TransactionSerializer(transaction).data, status=status.HTTP_200_OK)
+    else:
+        return Response({
+            'error': "Transaction not modified.",
+            'error_code': "E101"
+        }, status=status.HTTP_304_NOT_MODIFIED)
+    
 
 class TransactionAPIView(APIView):
     def post(self, request, format=None):
