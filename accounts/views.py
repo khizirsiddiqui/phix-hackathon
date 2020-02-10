@@ -52,8 +52,14 @@ def get_groups(request):
 
 def get_profile_data(request, username):
     if request.method == 'GET':
-        user = get_object_or_404(User, username=username)
+        user = get_object_or_404(User, username__iexact=username)
         profile = Profile.objects.get(user=user)
+        serializer = ProfileSerializer(profile, many=False, context={"request": request})
+        return JSONResponse(serializer.data)
+
+def get_profile_data_by_phone(request, phone_number):
+    if request.method == 'GET':
+        profile = get_object_or_404(Profile, phone_number=phone_number)
         serializer = ProfileSerializer(profile, many=False, context={"request": request})
         return JSONResponse(serializer.data)
 

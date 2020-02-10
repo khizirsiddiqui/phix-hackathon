@@ -25,7 +25,7 @@ class Transaction(models.Model):
     txn_type = models.IntegerField(choices=txn_type_choices)
     status = models.CharField("Status", max_length=10)
     currency = models.CharField("Currency", default="INR", max_length=5)
-    txn_date_time = models.DateTimeField("DateTime", auto_now=False, auto_now_add=False)
+    txn_date_time = models.DateTimeField("DateTime", auto_now=True)
 
     class Meta:
         verbose_name = "Transaction"

@@ -4,6 +4,7 @@ from django.db.models.signals import post_save
 from django.dispatch import receiver
 from django.db.models import Q
 from django.utils.timezone import make_aware
+from django.core.validators import RegexValidator
 
 from phix import settings
 from .utils import image_as_base64
@@ -27,6 +28,13 @@ class Profile(models.Model):
     currency = models.CharField("Currency", default="INR", max_length=5)
     friends = models.ManyToManyField(User, related_name="friends")
     upi_id = models.CharField("UPI ID", max_length=100, default="example@upi", validators=[validate_upi_id])
+    phone_regex = RegexValidator(
+        regex=r'^\+?1?\d{9,15}$',
+        message="Phone number must be entered in the format: '+999999999'. Up to 15 digits allowed.")
+    phone_number = models.CharField(
+        validators=[phone_regex], 
+        max_length=17, 
+        blank=True) # validators should be a list
 
     def __str__(self):
         return self.user.get_full_name()

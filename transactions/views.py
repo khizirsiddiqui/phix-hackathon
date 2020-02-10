@@ -211,12 +211,48 @@ def settle_single_transaction(request, txnId):
             'error': "Transaction not modified.",
             'error_code': "E101"
         }, status=status.HTTP_304_NOT_MODIFIED)
-    
 
-class TransactionAPIView(APIView):
-    def post(self, request, format=None):
-        serializer = TransactionSerializer(data=request.data)
-        if serializer.is_valid():
-            serializer.save()
-            return Response(serializer.data, status=status.HTTP_201_CREATED)
-        return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+@api_view(['POST'])
+def create_transaction(request):
+    print("-"*20)
+    print(request.POST)
+    print("-"*20)
+    if 'source' not in request.POST:
+        return Response({
+            'error': "source field not recieved",
+            'error_code': "E201"
+        }, status=status.HTTP_206_PARTIAL_CONTENT)
+    if 'destination' not in request.POST:
+        return Response({
+            'error': "destination field not recieved",
+            'error_code': "E202"
+        }, status=status.HTTP_206_PARTIAL_CONTENT)
+    if 'description' not in request.POST:
+        return Response({
+            'error': "description field not recieved",
+            'error_code': "E203"
+        }, status=status.HTTP_206_PARTIAL_CONTENT)
+    if 'amount' not in request.POST:
+        return Response({
+            'error': "amount field not recieved",
+            'error_code': "E204"
+        }, status=status.HTTP_206_PARTIAL_CONTENT)
+    user = get_object_or_404(User, username=request.POST['source'])
+    second_user = get_object_or_404(User, username=request.POST['destination'])
+    txn_id = 'txn_'
+    last_txn_id = Transaction.objects.all().latest('txn_date_time').txn_id
+    last_txn_id = last_txn_id.split('_')[1]
+    txn_id += str(int(last_txn_id) + 1)
+    transaction = Transaction.objects.create(
+        amount=request.POST['amount'],
+        source=user,
+        destination=second_user,
+        status='processed',
+        description=request.POST['description'],
+        txn_id=txn_id,
+        txn_type=0 # Always a debit
+    )
+    return Response(
+        TransactionSerializer(transaction).data,
+        status=status.HTTP_200_OK
+    )

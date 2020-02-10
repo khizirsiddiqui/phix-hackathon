@@ -13,6 +13,6 @@ urlpatterns = [
     path(r'today_transactions/', views.user_today_transactions, name='user_today_transactions'),
     path(r'transactions/<username1>/<username2>/', views.all_P2P_transactions, name='all_P2P_transactions'),
 
-    path(r'create_transaction/', views.TransactionAPIView.as_view(), name='create_transaction'),
+    path(r'create_transaction/', views.create_transaction, name='create_transaction'),
     path(r'settle/<txnId>/', views.settle_single_transaction, name='settle_single_transaction'),
 ]
