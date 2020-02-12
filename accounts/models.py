@@ -61,7 +61,7 @@ class Profile(models.Model):
             txn_date_time__range=[
                 from_date.strftime("%Y-%m-%d %H:%M:%S"),
                 to_date.strftime("%Y-%m-%d %H:%M:%S")],
-        )
+        ).order_by('-txn_date_time')
         return transactions
 
     def get_analytic_transactions(self, dlen=0):
@@ -72,7 +72,7 @@ class Profile(models.Model):
             txn_date_time__range=[
                 from_date.strftime("%Y-%m-%d %H:%M:%S"),
                 to_date.strftime("%Y-%m-%d %H:%M:%S")],
-        )
+        ).order_by('-txn_date_time')
         return transactions
 
     def get_transactions_on(self, dateX):
@@ -83,21 +83,21 @@ class Profile(models.Model):
             txn_date_time__range=[
                 from_date.strftime("%Y-%m-%d %H:%M:%S"),
                 to_date.strftime("%Y-%m-%d %H:%M:%S")],
-        )
+        ).order_by('-txn_date_time')
         return transactions
 
     def all_P2P_transactions(self, second_person):
         transactions = Transaction.objects.filter(
             (Q(destination=self.user) & Q(source=second_person)) | 
             (Q(destination=second_person) & Q(source=self.user))
-        )
+        ).order_by('-txn_date_time')
         return transactions
 
     def all_transactions(self):
         transactions = Transaction.objects.filter(
             (Q(destination=self.user)) | 
             (Q(source=self.user))
-        )
+        ).order_by('-txn_date_time')
         return transactions
         
 

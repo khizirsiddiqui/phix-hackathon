@@ -66,23 +66,40 @@ def get_profile_data_by_phone(request, phone_number):
 def check_user_exists(username):
     return User.objects.filter(username=username).count() > 0
 
-def add_friend(request, username, friend_username):
-    if request.method == 'GET':
-        if check_user_exists(friend_username):
-            friend = User.objects.get(username=friend_username)
-            user = User.objects.get(username=username)
-            user.profile.friends.add(friend)
-            user.profile.save()
-            friends = user.profile.friends.all()
-            serializer = UserSerializer(friends, many=True, context={"request": request})
-            return JSONResponse(serializer.data)
-        else:
-            return JSONResponse(
-                {
-                    'error': 'User does NOT exists.',
-                    'error_code': 'E001'
-                }
-            )
+@api_view(['POST'])
+def add_friend(request):
+    if 'friend_username' not in request.POST:
+        return Response(
+            {
+                'error': 'friend_username not found.',
+                'error_code': 'E007'
+            },
+            status=status.HTTP_206_PARTIAL_CONTENT
+        )
+    if 'username' not in request.POST:
+        return Response(
+            {
+                'error': 'username not found.',
+                'error_code': 'E008'
+            },
+            status=status.HTTP_206_PARTIAL_CONTENT
+        )
+
+    if check_user_exists(request.POST['friend_username']):
+        friend = get_object_or_404(User, username=request.POST['friend_username'])
+        user = get_object_or_404(User, username=request.POST['username'])
+        user.profile.friends.add(friend)
+        user.profile.save()
+        friends = user.profile.friends.all()
+        serializer = UserSerializer(friends, many=True, context={"request": request})
+        return JSONResponse(serializer.data)
+    else:
+        return JSONResponse(
+            {
+                'error': 'User does NOT exists.',
+                'error_code': 'E001'
+            }
+        )
 
 @csrf_exempt
 @api_view(['POST'])
@@ -93,7 +110,7 @@ def create_user(request):
                 'error': 'Invalid Email ID.',
                 'error_code': 'E003'
             },
-            status=status.HTTP_204_NO_CONTENT
+            status=status.HTTP_206_PARTIAL_CONTENT
         )
     email = request.POST['email']
     username = ''
@@ -105,7 +122,7 @@ def create_user(request):
                 'error': 'Invalid Email ID.',
                 'error_code': 'E003'
             },
-            status=status.HTTP_204_NO_CONTENT
+            status=status.HTTP_206_PARTIAL_CONTENT
         )
     if check_user_exists(username):
         return Response(
@@ -113,7 +130,7 @@ def create_user(request):
                 'error': 'User already exists.',
                 'error_code': 'E002'
             },
-            status=status.HTTP_204_NO_CONTENT
+            status=status.HTTP_206_PARTIAL_CONTENT
         )
     if 'get_full_name' not in request.POST:
         return Response(
@@ -121,7 +138,7 @@ def create_user(request):
                 'error': 'Can not create account without Name.',
                 'error_code': 'E004'
             },
-            status=status.HTTP_204_NO_CONTENT
+            status=status.HTTP_206_PARTIAL_CONTENT
         )
     full_name = request.POST['get_full_name']
     first_name, last_name = full_name.split()
@@ -130,13 +147,13 @@ def create_user(request):
                 'error_code': 'E005',
                 'error': 'Can not create account without UPI ID.'
             },
-            status=status.HTTP_204_NO_CONTENT)
+            status=status.HTTP_206_PARTIAL_CONTENT)
     if 'image_string' not in request.POST:
         return JSONResponse({
                 'error_code': 'E006',
                 'error': 'Can not create account without Image.'
             },
-            status=status.HTTP_204_NO_CONTENT)
+            status=status.HTTP_206_PARTIAL_CONTENT)
     
     user_data = {
         'username': username,

@@ -11,6 +11,8 @@ from rest_framework import status
 from rest_framework.decorators import api_view
 from datetime import datetime, timedelta
 
+from random import randint
+
 from accounts.models import Profile
 from .models import Transaction
 from .serializers import TransactionSerializer
@@ -133,7 +135,7 @@ def get_analytics(request, username):
             }
         )
     base = make_aware(datetime.today())
-    date_list = [base - timedelta(days=x) for x in range(0, 30)]
+    date_list = sorted([base - timedelta(days=x) for x in range(0, 30)], reverse=True)
 
     analytics = {}
     for dateX in date_list:
@@ -146,26 +148,27 @@ def get_analytics(request, username):
                 amount = amount * -1.
             analytics[dateX.day] += amount
 
-    stats = {}
+    response = {}
     num_days_left = (make_aware(last_day_of_month(datetime.today())) - make_aware(datetime.today())).days
     num_days_this_month = make_aware(datetime.today()).day
     dnames = {'0':'today', '7':'week', '31':'month', str(num_days_this_month):'this_month'}
     for dlen in (0, 7, 31, num_days_this_month):
         txn_set = user.profile.get_analytic_transactions(dlen)
-        stats[dnames[str(dlen)]] = 0
+        response[dnames[str(dlen)]] = 0
         for txn in txn_set:
             amount = int(txn.amount)
             if txn.txn_type == 0:
                 # IF debit
                 amount = amount * -1.
-            stats[dnames[str(dlen)]] += amount
-    stats['daily_avg_current'] = int(stats['this_month'])/num_days_this_month
-    stats['daily_avg_required'] = int(user.profile.monthly_stipend - stats['this_month'])/num_days_left
-    stats['days_remaining'] = num_days_left
-    return JSONResponse({
+            response[dnames[str(dlen)]] += amount
+    response.update({
         "data": analytics,
-        'stats': stats
+        'daily_avg_current': float("{0:.2f}".format(int(response['this_month'])/num_days_this_month)),
+        'daily_avg_required': float("{0:.2f}".format(int(user.profile.monthly_stipend - response['this_month'])/num_days_left)),
+        'days_remaining': num_days_left,
+
     })
+    return JSONResponse(response)
 
 def get_outstanding(request, source, destination):
     if request.method == 'GET':
@@ -239,10 +242,7 @@ def create_transaction(request):
         }, status=status.HTTP_206_PARTIAL_CONTENT)
     user = get_object_or_404(User, username=request.POST['source'])
     second_user = get_object_or_404(User, username=request.POST['destination'])
-    txn_id = 'txn_'
-    last_txn_id = Transaction.objects.all().latest('txn_date_time').txn_id
-    last_txn_id = last_txn_id.split('_')[1]
-    txn_id += str(int(last_txn_id) + 1)
+    txn_id = 'txn_' + str(user.pk) + str(second_user.pk) + '_' + str(randint(1, 10^12))
     transaction = Transaction.objects.create(
         amount=request.POST['amount'],
         source=user,
@@ -254,5 +254,5 @@ def create_transaction(request):
     )
     return Response(
         TransactionSerializer(transaction).data,
-        status=status.HTTP_200_OK
+        status=status.HTTP_201_CREATED
     )
