@@ -50,18 +50,19 @@ def get_groups(request):
         serializer = GroupSerializer(groups, many=True,)
         return JSONResponse(serializer.data)
 
-def get_profile_data(request, username):
-    if request.method == 'GET':
-        user = get_object_or_404(User, username__iexact=username)
-        profile = Profile.objects.get(user=user)
-        serializer = ProfileSerializer(profile, many=False, context={"request": request})
-        return JSONResponse(serializer.data)
+@api_view(['POST'])
+def get_profile_data(request):
+    print(request.POST)
+    user = get_object_or_404(User, username__iexact=request.POST['search'])
+    profile = Profile.objects.get(user=user)
+    serializer = ProfileSerializer(profile, many=False, context={"request": request})
+    return Response(serializer.data, status=status.HTTP_201_CREATED)
 
-def get_profile_data_by_phone(request, phone_number):
-    if request.method == 'GET':
-        profile = get_object_or_404(Profile, phone_number=phone_number)
-        serializer = ProfileSerializer(profile, many=False, context={"request": request})
-        return JSONResponse(serializer.data)
+@api_view(['POST'])
+def get_profile_data_by_phone(request):
+    profile = get_object_or_404(Profile, phone_number=request.POST['search'])
+    serializer = ProfileSerializer(profile, many=False, context={"request": request})
+    return Response(serializer.data, status=status.HTTP_201_CREATED)
 
 def check_user_exists(username):
     return User.objects.filter(username=username).count() > 0
