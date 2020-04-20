@@ -52,12 +52,12 @@ def get_groups(request):
 
 @api_view(['GET'])
 def get_profile_data(request):
-    user = User.objects.filter(username__iexact=request.GET['keyword']).first()
-    if user is None:
-        profile = Profile.objects.filter(phone_number__contains=request.GET['keyword']).first()
+    users = User.objects.filter(username__icontains=request.GET['keyword'])
+    if users.count() == 0:
+        profile = Profile.objects.filter(phone_number__contains=request.GET['keyword'])
     else:
-        profile = Profile.objects.get(user=user)
-    serializer = ProfileSerializer(profile, many=False, context={"request": request})
+        profile = Profile.objects.filter(user__username__icontains=request.GET['keyword'])
+    serializer = ProfileSerializer(profile, many=True, context={"request": request})
     return Response(serializer.data, status=status.HTTP_302_FOUND)
 
 def check_user_exists(username):
