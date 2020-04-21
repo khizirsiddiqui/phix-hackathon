@@ -22,11 +22,11 @@ class JSONResponse(HttpResponse):
         kwargs['content_type'] = 'application/json'
         super(JSONResponse, self).__init__(content, **kwargs)
 
-def get_friends(request, username):
+def get_friends(request):
     if request.method == 'GET':
-        user = get_object_or_404(User, username=username)
-        friends = user.profile.friends.all()
-        serializer = UserSerializer(friends, many=True, context={"request": request})
+        user = get_object_or_404(User, username=request.GET['username'])
+        profile = Profile.objects.get(user=user)
+        serializer = ProfileSerializer(profile, many=False, context={"request": request})
         return JSONResponse(serializer.data)
 
 def get_groups(request):
