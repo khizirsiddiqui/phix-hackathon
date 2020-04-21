@@ -1,6 +1,5 @@
 from django.http import HttpResponse, HttpResponseForbidden
-from django.shortcuts import render
-from django.shortcuts import get_object_or_404
+from django.shortcuts import render, get_object_or_404
 from django.contrib.auth.models import User
 from django.views.decorators.csrf import csrf_exempt
 
@@ -25,8 +24,8 @@ class JSONResponse(HttpResponse):
 def get_friends(request):
     if request.method == 'GET':
         user = get_object_or_404(User, username=request.GET['username'])
-        profile = Profile.objects.get(user=user)
-        serializer = ProfileSerializer(profile, many=False, context={"request": request})
+        friends = user.profile.friends.all()
+        serializer = UserSerializer(friends, many=True, context={"request": request})
         return JSONResponse(serializer.data)
 
 def get_groups(request):
@@ -54,10 +53,8 @@ def get_groups(request):
 def get_profile_data(request):
     users = User.objects.filter(username__icontains=request.GET['keyword'])
     if users.count() == 0:
-        profile = Profile.objects.filter(phone_number__contains=request.GET['keyword'])
-    else:
-        profile = Profile.objects.filter(user__username__icontains=request.GET['keyword'])
-    serializer = ProfileSerializer(profile, many=True, context={"request": request})
+        users = User.objects.filter(profile__phone_number__contains=request.GET['keyword'])
+    serializer = UserSerializer(users, many=True, context={"request": request})
     return Response(serializer.data, status=status.HTTP_302_FOUND)
 
 def check_user_exists(username):
